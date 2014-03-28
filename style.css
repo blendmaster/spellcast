@@ -1,0 +1,38 @@
+html {
+  font-family: sans-serif;
+  color: #333;
+}
+
+.handle {
+  fill: #333;
+}
+
+.transmission {
+  stroke: none;
+  stroke-width: 1px;
+  fill: hsla(0, 90%, 30%, 0.05);
+}
+
+.interference {
+  stroke: #ccc;
+  stroke-width: 1px;
+  stroke-dasharray: 3, 3;
+  fill: none;
+}
+
+.sensing {
+  stroke: #ccc;
+  stroke-width: 1px;
+  stroke-dasharray: 1, 2;
+  fill: none;
+}
+
+.link {
+  stroke: #333;
+  stroke-width: 3px;
+  fill: none;
+}
+
+.source > .handle {
+  fill: green;
+}
