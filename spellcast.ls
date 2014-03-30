@@ -6,29 +6,34 @@ const
   CARRIER_SENSING_RANGE = 120
 
 # field state
-nodes = for i til 100
-  new BNode do
-    Math.random! * WIDTH
-    Math.random! * HEIGHT
+
+# random walk, deflecting from boundary
+nodes = let
+  x = Math.random! * WIDTH
+  y = Math.random! * HEIGHT
+
+  nodes = []
+  for i til 100
+    if Math.random! > 0.95 and nodes.length > 1
+      # restart random walk from random node instead of last
+      {x, y} = nodes[Math.floor Math.random! * nodes.length]
+
+    t = Math.random! * 2 * Math.PI
+    # bias towards outer edge of transmission range
+    r = Math.random! ^ 0.25 * TRANSMISSION_RANGE
+    dx = r * Math.cos t ; nx = x + dx
+    dy = r * Math.sin t ; ny = y + dy
+    nodes.push new BNode do
+      x = if nx < 0 or nx > WIDTH then x - dx else nx
+      y = if ny < 0 or ny > HEIGHT then y - dy else ny
+
+  nodes
 
 graph = unit-disk-graph TRANSMISSION_RANGE, nodes
-# remove disconnected
-for n, nei of graph
-  if nei.length is 0
-    nodes = nodes.filter (.id is not n)
-    delete graph[n]
-
-# TODO select largest connected component
 source = nodes.0
 
 # remove disconnected from source
 [btree, seen, links, max-depth] = bfs source, -> graph[it.id] ? []
-nodes = nodes.filter -> seen[it.id]
-for n, nei of graph
-  if not seen[n]
-    delete graph[n]
-  else
-    graph[n] = nei.filter -> seen[it.id]
 
 # algorithm state (for step-through)
 steps = []
