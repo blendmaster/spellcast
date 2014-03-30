@@ -38,7 +38,7 @@ nodes = let
 
         nexgen.push n
         nodes.push n
-        break gen if nodes.length > 300
+        break gen if nodes.length > 50
 
     gen = nexgen if nexgen.length > 0
     if Math.random! < restarts

@@ -9,22 +9,23 @@ html {
 
 .transmission {
   stroke: none;
-  stroke-width: 1px;
-  fill: hsla(0, 90%, 30%, 0.05);
+  fill: hsla(0, 90%, 30%, 0.01);
 }
 
 .interference {
-  stroke: #ccc;
-  stroke-width: 1px;
-  stroke-dasharray: 3, 3;
-  fill: none;
+  //stroke: #ccc;
+  //stroke-width: 1px;
+  //stroke-dasharray: 3, 3;
+  //fill: none;
+  fill: hsla(0, 90%, 50%, 0.01);
 }
 
 .sensing {
-  stroke: #ccc;
-  stroke-width: 1px;
-  stroke-dasharray: 1, 2;
-  fill: none;
+  //stroke: #ccc;
+  //stroke-width: 1px;
+  //stroke-dasharray: 1, 2;
+  //fill: none;
+  fill: hsla(0, 90%, 80%, 0.01);
 }
 
 .link {
