@@ -43,7 +43,7 @@ nodes = let
     gen = nexgen if nexgen.length > 0
     if Math.random! < restarts
       restarts *= 0.5
-      gen.push nodes.0 
+      gen.push nodes.0
 
   nodes
 
@@ -59,11 +59,10 @@ step-idx = 0
 
 # bind stuff
 d3.select \#field
-  ..select-all \.node .data nodes
+  ..select \#ranges .select-all \.range .data nodes
     ..exit!remove!
     ..enter!append \g
-      ..attr \id (.id)
-      ..attr \class \node
+      ..attr \class -> "range n#{it.id}"
       ..append \circle
         ..attr \class \transmission
         ..attr \r TRANSMISSION_RANGE
@@ -73,11 +72,15 @@ d3.select \#field
       ..append \circle
         ..attr \class \sensing
         ..attr \r CARRIER_SENSING_RANGE
-      ..append \circle
-        ..attr \class \handle
-        ..attr \r 3
     ..attr \transform ({x, y}) -> "translate(#x, #y)"
-  ..select-all \.link .data links
+  ..select \#handles .select-all \.handle .data nodes
+    ..exit!remove!
+    ..enter!append \circle
+      ..attr \class -> "handle n#{it.id}"
+      ..attr \r 3
+    ..attr \cx (.x)
+    ..attr \cy (.y)
+  ..select \#links .select-all \.link .data links
     ..exit!remove!
     ..enter!append \line
       ..attr \class \link
@@ -86,9 +89,8 @@ d3.select \#field
         x2: (.target.x)
         y1: (.source.y)
         y2: (.target.y)
-      ..style \stroke-width ->
-        5 * (max-depth - it.depth) / max-depth
-document.get-element-by-id source.id
+      #..style \stroke-width -> 5 * (max-depth - it.depth) / max-depth
+
+document.query-selector ".handle.n#{source.id}"
   ..class-list.add \source
-  ..query-selector \.handle .set-attribute \r 10
 

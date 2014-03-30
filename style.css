@@ -30,10 +30,10 @@ html {
 
 .link {
   stroke: #333;
-  stroke-width: 3px;
+  stroke-width: 1px;
   fill: none;
 }
 
-.source > .handle {
+.source {
   fill: green;
 }
