@@ -1,32 +1,49 @@
 const
   WIDTH = 500
   HEIGHT = 500
-  TRANSMISSION_RANGE    = 50
-  INTERFERENCE_RANGE    = 100
-  CARRIER_SENSING_RANGE = 120
+  TRANSMISSION_RANGE    = 30
+  INTERFERENCE_RANGE    = 70
+  CARRIER_SENSING_RANGE = 90
 
 # field state
 
 # random walk, deflecting from boundary
 nodes = let
-  x = 0.5 * WIDTH
-  y = 0.5 * HEIGHT
+  cx = 0.5 * WIDTH
+  cy = 0.5 * HEIGHT
 
-  nodes = []
-  for i til 50
-    nodes.push new BNode x, y
+  nodes = [new BNode cx, cy]
+  gen = [nodes.0]
 
-    if Math.random! > 0.95 and nodes.length > 1
-      # restart random walk from random node instead of last
-      {x, y} = nodes[Math.floor Math.random! * nodes.length]
+  restarts = 0.1
 
-    t = Math.random! * 2 * Math.PI
-    # bias towards outer edge of transmission range
-    r = Math.random! ^ 0.25 * TRANSMISSION_RANGE
-    dx = r * Math.cos t ; nx = x + dx
-    dy = r * Math.sin t ; ny = y + dy
-    x = if nx < 0 or nx > WIDTH then x - dx else nx
-    y = if ny < 0 or ny > HEIGHT then y - dy else ny
+  :gen loop
+    nexgen = []
+    for {x, y}: node in gen
+      ct = Math.atan2 y - cy, x - cx
+
+      for i til Math.floor Math.random! * 2 # fanout
+        t = Math.random! * 2 * Math.PI
+        if not init and Math.abs(t - ct) < Math.PI
+          t += Math.PI
+        init = true
+        # bias towards outer edge of transmission range
+        r = Math.random! ^ 0.25 * TRANSMISSION_RANGE
+        dx = r * Math.cos t ; nx = x + dx
+        dy = r * Math.sin t ; ny = y + dy
+
+        n = new BNode do
+          if nx < 0 or nx > WIDTH then x - dx else nx
+          if ny < 0 or ny > HEIGHT then y - dy else ny
+
+        nexgen.push n
+        nodes.push n
+        break gen if nodes.length > 300
+
+    gen = nexgen if nexgen.length > 0
+    if Math.random! < restarts
+      restarts *= 0.5
+      gen.push nodes.0 
 
   nodes
 
