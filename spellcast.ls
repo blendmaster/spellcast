@@ -9,11 +9,13 @@ const
 
 # random walk, deflecting from boundary
 nodes = let
-  x = Math.random! * WIDTH
-  y = Math.random! * HEIGHT
+  x = 0.5 * WIDTH
+  y = 0.5 * HEIGHT
 
   nodes = []
-  for i til 100
+  for i til 50
+    nodes.push new BNode x, y
+
     if Math.random! > 0.95 and nodes.length > 1
       # restart random walk from random node instead of last
       {x, y} = nodes[Math.floor Math.random! * nodes.length]
@@ -23,9 +25,8 @@ nodes = let
     r = Math.random! ^ 0.25 * TRANSMISSION_RANGE
     dx = r * Math.cos t ; nx = x + dx
     dy = r * Math.sin t ; ny = y + dy
-    nodes.push new BNode do
-      x = if nx < 0 or nx > WIDTH then x - dx else nx
-      y = if ny < 0 or ny > HEIGHT then y - dy else ny
+    x = if nx < 0 or nx > WIDTH then x - dx else nx
+    y = if ny < 0 or ny > HEIGHT then y - dy else ny
 
   nodes
 
