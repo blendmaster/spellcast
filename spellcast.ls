@@ -68,6 +68,19 @@ levels.reverse!
 hull = d3.geom.hull!
   .x (.node.x) .y (.node.y)
 
+# max independent set, in order of bfs
+set = {}
+q = [btree]
+while q.length > 0
+  children = []
+  for n in q
+    # unless already covered, add to independent set
+    unless graph[n.node.id].some (-> set[it.id]?)
+      set[n.node.id] = n.node
+    children.push ...n.children
+
+  q = children
+
 # bind stuff
 d3.select \#field
   ..select \#ranges .select-all \.range .data nodes
@@ -93,12 +106,12 @@ d3.select \#field
     ..exit!remove!
     ..enter!append \circle
       ..attr \class -> "handle n#{it.id}"
+      ..classed \independent -> set[it.id]?
       ..attr \r 3
       ..on \mouseover !->
         d3.select-all ".n#{it.id}" .classed \hover true
       ..on \mouseout !->
         d3.select-all ".n#{it.id}" .classed \hover false
-
     ..attr \cx (.x)
     ..attr \cy (.y)
   ..select \#links .select-all \.link .data links

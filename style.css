@@ -8,7 +8,7 @@ html {
 }
 
 .transmission {
-  fill: hsla(0, 90%, 30%, 0.01);
+  fill: hsla(0, 90%, 30%, 0.03);
 }
 
 .interference {
@@ -16,7 +16,7 @@ html {
   //stroke-width: 1px;
   //stroke-dasharray: 3, 3;
   //fill: none;
-  fill: hsla(0, 90%, 50%, 0.01);
+  fill: none;
 }
 
 .sensing {
@@ -24,7 +24,7 @@ html {
   //stroke-width: 1px;
   //stroke-dasharray: 1, 2;
   //fill: none;
-  fill: hsla(0, 90%, 80%, 0.01);
+  fill: none;
 }
 
 .hover > .transmission {
@@ -62,6 +62,9 @@ html {
   fill: hsla(180, 90%, 50%, 0.15);
 }
 
+.independent {
+  fill: red;
+}
 .source {
   fill: green;
 }
