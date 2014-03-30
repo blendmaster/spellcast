@@ -1,7 +1,7 @@
 const
   WIDTH = 500
   HEIGHT = 500
-  TRANSMISSION_RANGE    = 30
+  TRANSMISSION_RANGE    = 50
   INTERFERENCE_RANGE    = 70
   CARRIER_SENSING_RANGE = 90
 
@@ -78,6 +78,11 @@ d3.select \#field
     ..enter!append \circle
       ..attr \class -> "handle n#{it.id}"
       ..attr \r 3
+      ..on \mouseover !->
+        d3.select-all ".n#{it.id}" .classed \hover true
+      ..on \mouseout !->
+        d3.select-all ".n#{it.id}" .classed \hover false
+
     ..attr \cx (.x)
     ..attr \cy (.y)
   ..select \#links .select-all \.link .data links
