@@ -3,6 +3,11 @@ range =
   interference: 130
   sensing: 160
 
+alpha = range.interference / range.transmission
+beta = range.sensing / range.transmission
+t-avoid-thresh = Math.max(alpha + 1, beta) * range.transmission
+r-avoid-thresh = (Math.max(alpha, beta) + 2) * range.transmission
+
 dist = (a, b) ->
   Math.sqrt Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2)
 
@@ -19,13 +24,17 @@ links =
   * source: t2, target: r2
 
 avoid-t = document.get-element-by-id \avoid-t
+  ..add-event-listener \click !-> draw!
 avoid-r = document.get-element-by-id \avoid-r
+  ..add-event-listener \click !-> draw!
 t-constraint = d3.select \#t-constraint
 r-constraint = d3.select \#r-constraint
 t-line = d3.select \#t-line
 r-line = d3.select \#r-line
 t-text = d3.select \#t-text
 r-text = d3.select \#r-text
+clip-circle = d3.select \#clip-circle
+i-circle = d3.select \#i-circle
 
 constrain = (dragged) !->
   # constrain transmitter to receiver
@@ -50,12 +59,26 @@ constrain = (dragged) !->
       x: i.x + range.transmission * Math.cos t
       y: i.y + range.transmission * Math.sin t
 
-  if avoid-t.checked
-    # apply sufficient conditions
-    a = 1
-  if avoid-r.checked
-    # apply sufficient conditions
-    a = 1
+  if avoid-t.checked and dist(t1, t2) < t-avoid-thresh
+    if t1 is dragged
+      i = t2; d = t1
+    else
+      i = t1; d = t2
+
+    t = Math.atan2 d.y - i.y, d.x - i.x
+    d <<<
+      x: i.x + t-avoid-thresh * Math.cos t
+      y: i.y + t-avoid-thresh * Math.sin t
+  if avoid-r.checked and dist(r1, r2) < r-avoid-thresh
+    if r1 is dragged
+      i = r2; d = r1
+    else
+      i = r1; d = r2
+
+    t = Math.atan2 d.y - i.y, d.x - i.x
+    d <<<
+      x: i.x + r-avoid-thresh * Math.cos t
+      y: i.y + r-avoid-thresh * Math.sin t
 drag = d3.behavior.drag!
   .origin -> it
   .on \drag !->
@@ -71,6 +94,8 @@ detect-conflicts = !->
 
   t1.conflicted = t2.conflicted =
     dist(t1, t2) < range.sensing
+
+constrain t1
 
 draw = !->
   detect-conflicts!
@@ -133,6 +158,16 @@ draw = !->
       ..attr \transform ({x, y}) -> "translate(#x, #y)"
       ..classed \conflicted (.conflicted)
 
+  clip-circle.attr do
+    cx: t1.x
+    cy: t1.y
+    r: range.interference
+
+  i-circle.attr do
+    cx: t2.x
+    cy: t2.y
+    r: range.interference
+
   tdist = dist t1, t2
   trot = (180 / Math.PI) * Math.atan2 t2.y - t1.y, t2.x - t1.x
   rdist = dist r1, r2
@@ -142,10 +177,12 @@ draw = !->
   r-line.attr \x2 rdist
   t-text.attr \x tdist / 2
   r-text.attr \x rdist / 2
-  t-constraint.attr \transform,
-    "translate(#{t1.x}, #{t1.y}) rotate(#trot)"
-  r-constraint.attr \transform,
-    "translate(#{r1.x}, #{r1.y}) rotate(#rrot)"
+  t-constraint
+    ..style \display if avoid-t.checked then null else \none
+    ..attr \transform, "translate(#{t1.x}, #{t1.y}) rotate(#trot)"
+  r-constraint
+    ..style \display if avoid-r.checked then null else \none
+    ..attr \transform, "translate(#{r1.x}, #{r1.y}) rotate(#rrot)"
 
 draw!
 

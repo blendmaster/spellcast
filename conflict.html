@@ -10,9 +10,13 @@
       <stop offset="90%" stop-color="rgba(255, 255, 255, 0)"/>
       <stop offset="100%" stop-color="#a33"/>
     </radialGradient>
+    <clipPath id="interfere">
+      <circle id="clip-circle"></circle>
+    </clipPath>
   </defs>
   <g id=ranges></g>
   <g id=pulses></g>
+  <circle id="i-circle" clip-path="url(#interfere)"></circle>
   <g id=links>
     <g id=t-constraint>
       <line id=t-line x1=0 y1=0 x2=200 y2=0></line>
