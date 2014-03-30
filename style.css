@@ -53,6 +53,15 @@ html {
   fill: none;
 }
 
+.level {
+  fill: hsla(180, 90%, 10%, 0.05);
+}
+
+.level:hover {
+  stroke: #333;
+  fill: hsla(180, 90%, 50%, 0.15);
+}
+
 .source {
   fill: green;
 }

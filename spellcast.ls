@@ -57,6 +57,17 @@ source = nodes.0
 steps = []
 step-idx = 0
 
+levels = []
+q = [btree]
+while q.length > 0
+  q = [].concat.apply [], q.map (.children)
+  levels.push ((levels[*-1]) or []) ++ q
+
+levels.reverse!
+
+hull = d3.geom.hull!
+  .x (.node.x) .y (.node.y)
+
 # bind stuff
 d3.select \#field
   ..select \#ranges .select-all \.range .data nodes
@@ -73,6 +84,11 @@ d3.select \#field
         ..attr \class \sensing
         ..attr \r CARRIER_SENSING_RANGE
     ..attr \transform ({x, y}) -> "translate(#x, #y)"
+  ..select \#levels .select-all \.level .data levels
+    ..exit!remove!
+    ..enter!append \path
+      ..attr \class \level
+      ..attr \d -> "M #{hull it .map (({{x, y}: node}) -> "#x #y") .join \L} Z"
   ..select \#handles .select-all \.handle .data nodes
     ..exit!remove!
     ..enter!append \circle
