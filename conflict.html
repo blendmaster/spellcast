@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang=en>
+<meta charset=utf-8>
+<link rel=stylesheet href=conflict.css>
+<title>Conflict Model</title>
+
+<svg id=field width=500 height=500 viewBox="0 0 500 500" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <radialGradient id="pulse">
+      <stop offset="90%" stop-color="rgba(255, 255, 255, 0)"/>
+      <stop offset="100%" stop-color="#a33"/>
+    </radialGradient>
+  </defs>
+  <g id=ranges></g>
+  <g id=pulses></g>
+  <g id=links>
+    <g id=t-constraint>
+      <line id=t-line x1=0 y1=0 x2=200 y2=0></line>
+      <text id=t-text y=30>max(α + 1, β)r</text>
+    </g>
+    <g id=r-constraint>
+      <line id=r-line x1=0 y1=0 x2=200 y2=0></line>
+      <text id=r-text y=30>(max(α, β) + 2)r</text>
+    </g>
+  </g>
+  <g id=handles></g>
+</svg>
+
+<div id=label>
+  <label><input type=checkbox id=avoid-t> Avoid Transmission Conflict</label><br>
+  <label><input type=checkbox id=avoid-r> Avoid Reception Conflict</label>
+</div>
+
+<script src=d3.min.js></script>
+<script src=bacon.min.js></script>
+<script src=conflict.js></script>
