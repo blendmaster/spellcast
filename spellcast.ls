@@ -1,9 +1,9 @@
 const
   WIDTH = 500
   HEIGHT = 500
-  DEFAULT_TRANSMISSION_RANGE    = 50
-  DEFAULT_INTERFERENCE_RANGE    = 100
-  DEFAULT_CARRIER_SENSING_RANGE = 120
+  TRANSMISSION_RANGE    = 50
+  INTERFERENCE_RANGE    = 100
+  CARRIER_SENSING_RANGE = 120
 
 # field state
 nodes = for i til 100
@@ -11,7 +11,7 @@ nodes = for i til 100
     Math.random! * WIDTH
     Math.random! * HEIGHT
 
-graph = unit-disk-graph DEFAULT_TRANSMISSION_RANGE, nodes
+graph = unit-disk-graph TRANSMISSION_RANGE, nodes
 # remove disconnected
 for n, nei of graph
   if nei.length is 0
@@ -43,13 +43,13 @@ d3.select \#field
       ..attr \class \node
       ..append \circle
         ..attr \class \transmission
-        ..attr \r DEFAULT_TRANSMISSION_RANGE
+        ..attr \r TRANSMISSION_RANGE
       ..append \circle
         ..attr \class \interference
-        ..attr \r DEFAULT_INTERFERENCE_RANGE
+        ..attr \r INTERFERENCE_RANGE
       ..append \circle
         ..attr \class \sensing
-        ..attr \r DEFAULT_CARRIER_SENSING_RANGE
+        ..attr \r CARRIER_SENSING_RANGE
       ..append \circle
         ..attr \class \handle
         ..attr \r 3
