@@ -39,25 +39,27 @@ bfs = (start, neighbors-of) ->
 
   return [root, seen, links, depth]
 
-dist = (a, b) ->
-  Math.sqrt Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2)
+dist2 = (a, b) ->
+  Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2)
 
 coloring = ->
   # TODO
   # Smallest-last ordering and clustering and graph coloring algorithms.
 
 unit-disk-graph = (unit, nodes) ->
+  unit2 = unit * unit
   # construct quad-tree for detection TODO
   # root = d3.geom.quadtree!x (.x) .y (.y) <| nodes
   # root.visit (node, x1, y1, x2, y2) ->
   #   if ((y2 - y1) <? (x2 - x1)) <= unit
   #     stuff
-  neighbors = {}
-  for n in nodes
-    nei = neighbors[n.id] = []
-    for m in nodes
-      if m is not n and dist(n, m) < unit
-        nei.push m
+  neighbors = {[n.id, []] for n in nodes}
+  for n, i in nodes
+    for j from i til nodes.length
+      m = nodes[j]
+      if dist2(n, m) < unit2
+        neighbors[n.id]push m
+        neighbors[m.id]push n
 
   return neighbors
 
