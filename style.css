@@ -52,7 +52,6 @@ html {
   stroke-width: 1px;
   fill: none;
 }
-
 .level {
   fill: hsla(180, 90%, 10%, 0.05);
 }
@@ -66,5 +65,5 @@ html {
   fill: red;
 }
 .source {
-  fill: green;
+  fill: #7f7;
 }

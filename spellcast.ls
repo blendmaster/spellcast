@@ -1,14 +1,16 @@
 const
-  WIDTH = 500
-  HEIGHT = 500
+  WIDTH = document.document-element.client-width - 50
+  HEIGHT = document.document-element.client-height - 50
   TRANSMISSION_RANGE    = 50
   INTERFERENCE_RANGE    = 70
   CARRIER_SENSING_RANGE = 90
+  alpha = INTERFERENCE_RANGE / TRANSMISSION_RANGE
+  beta = CARRIER_SENSING_RANGE / TRANSMISSION_RANGE
 
 # field state
 
 # random walk, deflecting from boundary
-nodes = let
+rand-nodes = ->
   cx = 0.5 * WIDTH
   cy = 0.5 * HEIGHT
 
@@ -38,7 +40,7 @@ nodes = let
 
         nexgen.push n
         nodes.push n
-        break gen if nodes.length > 50
+        break gen if nodes.length > 100
 
     gen = nexgen if nexgen.length > 0
     if Math.random! < restarts
@@ -47,11 +49,26 @@ nodes = let
 
   nodes
 
+cx = 0.5 * WIDTH; cy = 0.5 * HEIGHT
+nodes =
+  * new BNode cx, cy
+  * new BNode cx + TRANSMISSION_RANGE - 1, cy
+  * new BNode cx + TRANSMISSION_RANGE - 1, cy + TRANSMISSION_RANGE - 1
+  * new BNode cx + TRANSMISSION_RANGE - 1, cy + 2 * TRANSMISSION_RANGE - 1
+  * new BNode cx + 2 * TRANSMISSION_RANGE - 2, cy
+  * new BNode cx + 3 * TRANSMISSION_RANGE - 3, cy
+  * new BNode cx + 4 * TRANSMISSION_RANGE - 4, cy
+
+nodes = rand-nodes!
+
 graph = unit-disk-graph TRANSMISSION_RANGE, nodes
+gct = unit-disk-graph Math.max(alpha + 1, beta) * TRANSMISSION_RANGE, nodes
+gct-links = graph-links gct, nodes
+gcr = unit-disk-graph (2 + Math.max(alpha, beta)) * TRANSMISSION_RANGE, nodes
+gcr-links = graph-links gcr, nodes
 source = nodes.0
 
-# remove disconnected from source
-[btree, seen, links, max-depth] = bfs source, -> graph[it.id] ? []
+[btree, seen, links, max-depth] = bfs source, -> graph[it.id]
 
 # algorithm state (for step-through)
 steps = []
@@ -81,8 +98,12 @@ while q.length > 0
 
   q = children
 
+schedule = cabs graph, gcr, gct, btree, set
+console.log schedule
+
 # bind stuff
 d3.select \#field
+  ..attr width: WIDTH, height: HEIGHT
   ..select \#ranges .select-all \.range .data nodes
     ..exit!remove!
     ..enter!append \g
