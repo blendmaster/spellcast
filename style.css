@@ -27,6 +27,14 @@ html {
   fill: none;
 }
 
+.gct {
+  fill: none;
+}
+
+.gcr {
+  fill: none;
+}
+
 .hover > .transmission {
   stroke: #a33;
   stroke-width: 1px;
@@ -47,11 +55,32 @@ html {
   fill: none;
 }
 
+.hover > .gct {
+  stroke: #333;
+  stroke-width: 1px;
+  stroke-dasharray: 1, 5;
+  fill: none;
+}
+
+.hover > .gcr {
+  stroke: #333;
+  stroke-width: 1px;
+  stroke-dasharray: 1, 7;
+  fill: none;
+}
+
 .link {
   stroke: rgba(50, 50, 50, 0.5);
   stroke-width: 1px;
   fill: none;
 }
+
+.udg-link {
+  stroke: rgba(255, 255, 255, 0.5);
+  stroke-width: 1px;
+  fill: none;
+}
+
 .level {
   fill: hsla(180, 90%, 10%, 0.05);
 }
@@ -65,5 +94,13 @@ html {
   fill: red;
 }
 .source {
+  fill: #7f7;
+}
+
+.pulse {
+  fill: red;
+}
+
+.received {
   fill: #7f7;
 }
