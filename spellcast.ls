@@ -166,11 +166,15 @@ d3.select \#trace .select-all \tr .data trace
           for {node} in actual-levels[i]
             classify node.id, \highlight
 
-        # highlight cover
-        for node in trace[2][i]
-          classify node.id, \cover
-
         switch j
+        case 2 # cover
+          # highlight cover
+          for node in trace[2][i]
+            classify node.id, \cover
+
+          # show gcr circles
+          d3.select-all \.range .data it, (.id)
+            ..select \.transmission .classed \show true
         case 3, 4 # cover -> set color
           sub = trace.3[i]
           d3.select \#udg-links .classed \hide true
@@ -191,6 +195,10 @@ d3.select \#trace .select-all \tr .data trace
             ..classed \highlight true
             ..style \stroke -> colors col[it.id]
 
+          # show gcr circles
+          d3.select-all \.range .data sub.p, (.id)
+            ..select \.gcr .classed \show true
+
           if j is 4 # show schedule
             sched = it
             d3.select-all \.handle .data trace[2][i], (.id)
@@ -202,6 +210,9 @@ d3.select \#trace .select-all \tr .data trace
                     if n is it
                       s = i
                 colors s
+            # show transmission circles
+            d3.select-all \.range .data trace[2][i], (.id)
+              ..select \.transmission .classed \show true
 
         case 5, 6, 7
           uninformed = trace[5][i]
@@ -232,6 +243,10 @@ d3.select \#trace .select-all \tr .data trace
               ..style \stroke -> colors col[it.id]
             sched = it
 
+            # show gcr circles
+            d3.select-all \.range .data sub.p, (.id)
+              ..select \.gct .classed \show true
+
           if j is 7 # show schedule
             d3.select-all \.handle .data uninformed, (.id)
               ..classed \scheduled true
@@ -244,11 +259,15 @@ d3.select \#trace .select-all \tr .data trace
                         s = i
                         break
                 colors s
+            # show transmission circles
+            d3.select-all \.range .data sub.p, (.id)
+              ..select \.transmission .classed \show true
 
       ..on \mouseout (, i) !->
         unclassify \highlight
         unclassify \cover
         unclassify \hide
+        unclassify \show
         unclassify \scheduled
         unclassify \uninformed
         d3.select \#handles .classed \unhighlight false

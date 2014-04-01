@@ -35,7 +35,7 @@ html {
   fill: none;
 }
 
-.hover > .transmission {
+.hover > .transmission, .transmission.show {
   stroke: #a33;
   stroke-width: 1px;
   fill: hsla(0, 90%, 30%, 0.1);
@@ -55,14 +55,14 @@ html {
   fill: none;
 }
 
-.hover > .gct {
+.hover > .gct, .gct.show {
   stroke: #333;
   stroke-width: 1px;
   stroke-dasharray: 1, 5;
   fill: none;
 }
 
-.hover > .gcr {
+.hover > .gcr, .gcr.show {
   stroke: #333;
   stroke-width: 1px;
   stroke-dasharray: 1, 7;
@@ -128,7 +128,8 @@ html {
 
 .handle.highlight {
   opacity: 1;
-  stroke: blue;
+  fill: blue;
+  stroke: none;
   stroke-width: 4px;
 }
 .handle.independent.highlight {
