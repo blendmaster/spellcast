@@ -42,6 +42,9 @@ bfs = (start, neighbors-of) ->
 dist2 = (a, b) ->
   Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2)
 
+dist = (a, b) ->
+  Math.sqrt Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2)
+
 unit-disk-graph = (unit, nodes) ->
   unit2 = unit * unit
   # construct quad-tree for detection TODO
@@ -86,19 +89,19 @@ intersect = (a, b) ->
 
 tracer =
   * 'Level'
-  * 'independent set'
-  * 'set cover'
-  * 'color-ui'
-  * 'schedule-ui'
-  * 'uninformed'
-  * 'color-wi'
-  * 'schedule-wi'
+  * 'Independent Set'
+  * 'Cover'
+  * 'Cover → Set Color'
+  * 'Cover → Set Schedule'
+  * 'Uninformed'
+  * 'Set → Uninformed Color'
+  * 'Set → Uninformed Schedule'
 
 cabs = (graph, gcr, gct, btree, set) ->
   informed = {}
   level = [btree]
   schedule = []
-  trace = [[] for thing in tracer]
+  trace = [[] <<< name: thing for thing in tracer]
   i = 0
   while level.length > 0
     trace.0.push i
@@ -201,13 +204,16 @@ function sub-cabs graph, p, is-receive, q, gc
 function to-set list
   s = {}
   for list
-    s[..id] = s
+    s[..id] = ..
   s
+
+function to-list set
+  Object.keys(set)map (set.)
 
 function set-minus a, b
   s = {}
   for k, v of a
-    unless b[k]
+    unless b[k]?
       s[k] = v
   s
 
@@ -228,56 +234,85 @@ function by-fn fn
     else
       0
 
+h-tracer =
+  * 'Active'
+  * 'Order'
+  * 'Schedule'
+
 function hcabs graph, r, alpha, beta, s, nodes
   inf = {(s.id): s}
   inflen = 1
   active = {(s.id): s}
   time = 0
   schedule = []
-  while inflen is not nodes.length
+  trace = [[] <<< name: thing for thing in h-tracer]
+  while inflen < nodes.length
     q = []
     for k, n of active
       q.push n
 
+    trace.0.push to-list active
+
     ss = {}
 
+    #console.log 'outer' q, active
+
+    t = []
     while q.length > 0
       u = q
-        .sort by-fn -> set-size set-minus (to-set graph[it.id]), inf
-        .unshift!
+        .sort by-fn ->
+          set-size set-minus (to-set graph[it.id]), inf
+        .shift!
+      delete active[u.id]
 
       n-inf = set-minus (to-set graph[u.id]), inf
+      #console.log 'neighbors' u, n-inf, {...inf}, (to-set graph[u.id])
       if set-size(n-inf) > 0
+        t.push n-inf: to-list(n-inf), u: u
+        #console.log 'culling q' q.length, q
         nu-q = []
         # remove all nodes whose transmissions would conflict with
         # u's transmission
-        for v in q
+        :adder for v in q
           v-inf = set-minus (to-set graph[v.id]), inf
           for k, w of v-inf
             unless dist(u, w) <= alpha * r
               nu-q.push v
+              continue adder
+
         q = nu-q
+        #console.log 'culling q' q.length, q
         nu-q = []
+        in-q = {}
         for k, v of n-inf
           for w in q
-            unless dist(w, v) <= alpha * r
+            unless in-q[w.id] or dist(w, v) <= alpha * r
+              in-q[w.id] = true
               nu-q.push w
+
         q = nu-q
+        #console.log 'culling q' q.length, q
         nu-q = []
         for v in q
           unless dist(u, v) <= beta * r
             nu-q.push v
         q = nu-q
+        #console.log 'culling q' q.length, q
 
         ss[u.id] = u
 
-        for w in n-inf
+        #console.log 'n-/inf' n-inf
+        for k, w of n-inf
           inf[w.id] = w
+          inflen++
           active[w.id] = w
+        #console.log 'active' active
+        #console.log 'inf' inf
+      #console.log 'nu-q len' q.length
 
-    time++
+    trace.1.push t
+    trace.2.push to-list ss
     schedule[time] = Object.keys(ss)map (ss.)
+    time++
 
-  return schedule
-
-
+  return [trace, schedule]

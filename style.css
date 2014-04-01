@@ -126,7 +126,7 @@ html {
   opacity: 0.3;
 }
 
-.handle.highlight {
+.handle.highlight, .handle.h-highlight {
   opacity: 1;
   fill: blue;
   stroke: none;
@@ -139,6 +139,12 @@ html {
 }
 
 .handle.cover {
+  opacity: 1;
+  fill: orange;
+  stroke: black;
+  stroke-width: 4px;
+}
+.handle.order {
   opacity: 1;
   fill: orange;
   stroke: black;
@@ -159,7 +165,10 @@ html {
 }
 
 table {
-  border-collapse: collapse
+  border-collapse: collapse;
+  max-width: 1024px;
+  overflow-x: auto;
+  display: block;
 }
 
 th, td {

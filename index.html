@@ -10,6 +10,19 @@
   <label><input type=checkbox id=udg>Graph</label>
   <button id=anim>Animate</button>
   <button id=clear>Clear</button>
+  <button id=rand>Randomize</button>
+  <input type=range min=10 max=300 value=50 id=num-rand>
+  <span> 
+    Algorithm:
+  </span>
+  <label>
+    CABS
+    <input type=radio name=alg checked id=cabs>
+  </label>
+  <label>
+    HCABS
+    <input type=radio name=alg id=hcabs>
+  </label>
 </div>
 <svg id=field>
   <g id=ranges></g>
@@ -27,14 +40,6 @@
   <tr id=schedule><th>Schedule
 </table>
 <table id=trace>
-  <tr><th>Level
-  <tr><th>Independent Set
-  <tr><th>Cover
-  <tr><th>Cover → Set Color
-  <tr><th>Cover → Set Schedule
-  <tr><th>Uninformed
-  <tr><th>Set → Uninformed Color
-  <tr><th>Set → Uninformed Schedule
 </table>
 
 <script src=d3.min.js></script>
