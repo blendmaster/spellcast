@@ -69,7 +69,7 @@ html {
   fill: none;
 }
 
-.link {
+.link, .gcr-link, .gct-link {
   stroke: rgba(50, 50, 50, 0.5);
   stroke-width: 1px;
   fill: none;
@@ -103,4 +103,70 @@ html {
 
 .received {
   fill: #7f7;
+}
+
+.handle.receiving {
+  fill: #7ff;
+}
+
+.handle.sending {
+  fill: #ff7;
+}
+
+#trace th {
+  text-align: left
+}
+
+#trace td {
+  width: 2em
+
+}
+
+.unhighlight .handle {
+  opacity: 0.3;
+}
+
+.handle.highlight {
+  opacity: 1;
+  stroke: blue;
+  stroke-width: 4px;
+}
+.handle.independent.highlight {
+  opacity: 1;
+  stroke: red;
+  stroke-width: 4px;
+}
+
+.handle.cover {
+  opacity: 1;
+  fill: orange;
+  stroke: black;
+  stroke-width: 4px;
+}
+
+.scheduled {
+  stroke-width: 8px !important;
+
+}
+
+.hide, .really-hide {
+  display: none !important;
+}
+
+.show {
+  display: inherit !important;
+}
+
+table {
+  border-collapse: collapse
+}
+
+th, td {
+  padding: 0.25em
+}
+
+.handle.uninformed {
+  opacity: 1;
+  stroke: blue;
+  stroke-width: 4px;
 }

@@ -4,9 +4,16 @@
 <link rel=stylesheet href=style.css>
 <title>Spellcast</title>
 
+<div>
+  <label><input type=checkbox id=hull>Hull</label>
+  <label><input type=checkbox id=bfs>Tree</label>
+  <label><input type=checkbox id=udg>Graph</label>
+</div>
 <svg id=field>
   <g id=ranges></g>
   <g id=udg-links></g>
+  <g id=gcr-links></g>
+  <g id=gct-links></g>
   <g id=links></g>
   <g id=levels></g>
   <g id=pulses></g>
@@ -14,7 +21,24 @@
   <g id=handles></g>
 </svg>
 
-<button id=anim>Animate</button>
+<table id=schedule-table>
+  <tr id=schedule><th>Schedule
+</table>
+
+<div>
+  <button id=anim>Animate</button>
+</div>
+
+<table id=trace>
+  <tr><th>Level
+  <tr><th>Independent Set
+  <tr><th>Cover
+  <tr><th>Cover → Set Color
+  <tr><th>Cover → Set Schedule
+  <tr><th>Uninformed
+  <tr><th>Set → Uninformed Color
+  <tr><th>Set → Uninformed Schedule
+</table>
 
 <script src=d3.min.js></script>
 <script src=bacon.min.js></script>

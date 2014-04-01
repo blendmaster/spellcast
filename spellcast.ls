@@ -1,6 +1,6 @@
 const
-  WIDTH = document.document-element.client-width - 50
-  HEIGHT = document.document-element.client-height - 50
+  WIDTH = 500
+  HEIGHT = 500
   TRANSMISSION_RANGE    = 50
   INTERFERENCE_RANGE    = 70
   CARRIER_SENSING_RANGE = 90
@@ -10,7 +10,7 @@ const
 # field state
 
 # random walk, deflecting from boundary
-rand-nodes = ->
+rand-nodes = (num) ->
   cx = 0.5 * WIDTH
   cy = 0.5 * HEIGHT
 
@@ -40,7 +40,7 @@ rand-nodes = ->
 
         nexgen.push n
         nodes.push n
-        break gen if nodes.length > 150
+        break gen if nodes.length > num
 
     gen = nexgen if nexgen.length > 0
     if Math.random! < restarts
@@ -60,12 +60,14 @@ nodes =
   * new BNode cx + 3 * TRANSMISSION_RANGE - 3, cy
   * new BNode cx + 4 * TRANSMISSION_RANGE - 4, cy
 
-nodes = rand-nodes!
+nodes = rand-nodes 100
 
 graph = unit-disk-graph TRANSMISSION_RANGE, nodes
 udg-links = graph-links graph, nodes
 gct = unit-disk-graph Math.max(alpha + 1, beta) * TRANSMISSION_RANGE, nodes
+gct-links = graph-links gct, nodes
 gcr = unit-disk-graph (2 + Math.max(alpha, beta)) * TRANSMISSION_RANGE, nodes
+gcr-links = graph-links gcr, nodes
 source = nodes.0
 
 [btree, seen, links, max-depth] = bfs source, -> graph[it.id]
@@ -75,8 +77,10 @@ steps = []
 step-idx = 0
 
 levels = []
+actual-levels = []
 q = [btree]
 while q.length > 0
+  actual-levels.push q
   q = [].concat.apply [], q.map (.children)
   levels.push ((levels[*-1]) or []) ++ q
 
@@ -98,11 +102,12 @@ while q.length > 0
 
   q = children
 
-schedule = cabs graph, gcr, gct, btree, set
-console.log schedule
+{trace, schedule} = cabs graph, gcr, gct, btree, set
 timing = {[node.id, {send: [], recv: void}] for node in nodes}
 timing[source.id]recv = 0
+recv-schedule = []
 for slice, i in schedule
+  recv = []
   for transmit in slice
     timing[transmit.id]send.push i
     for nei in graph[transmit.id]
@@ -111,11 +116,148 @@ for slice, i in schedule
           that <? i
         else
           i
+      if timing[nei.id]recv is i
+        recv.push nei.id
+  recv-schedule.push recv
 max-delay = i
 
-console.log timing
+d3.select \#schedule .select-all \td .data d3.range(0, schedule.length)
+  ..exit!remove!
+  ..enter!append \td .text -> it
+  ..on \mouseover !->
+    for n in schedule[it]
+      d3.select-all ".n#{n.id}"
+        ..classed \hover true
+        ..classed \sending true
+    for n in recv-schedule[it]
+      d3.select-all ".n#{n}" .classed \receiving true
+    for i til it
+      for n in recv-schedule[i]
+        d3.select-all ".n#{n}" .classed \received true
 
-DURATION = 2000ms
+  ..on \mouseout !->
+    for n in schedule[it]
+      d3.select-all ".n#{n.id}"
+        ..classed \hover false
+        ..classed \sending false
+    d3.select-all \.receiving .classed \receiving false
+    d3.select-all \.received .classed \received false
+
+classify = (id, c) !->
+  d3.select-all ".n#{id}" .classed c, true
+unclassify = (c) !->
+  d3.select-all ".#c" .classed c, false
+
+colors = d3.scale.category20!
+
+# XXX yes I feel bad about this code, sorry
+d3.select \#trace .select-all \tr .data trace
+  ..select-all \td .data (-> it)
+    ..exit!remove!
+    ..on \mouseout (, i) !->
+        unclassify \highlight
+    ..enter!append \td
+      ..text (it, i, j) -> if j is 0 then it else \●
+      ..on \mouseover (it, i, j) !->
+        # unhighlight rest
+        d3.select \#handles .classed \unhighlight true
+        # highlight level
+        unless j is 3 or j is 4
+          for {node} in actual-levels[i]
+            classify node.id, \highlight
+
+        # highlight cover
+        for node in trace[2][i]
+          classify node.id, \cover
+
+        switch j
+        case 3, 4 # cover -> set color
+          sub = trace.3[i]
+          d3.select \#udg-links .classed \hide true
+          d3.select \#links .classed \hide true
+
+          d3.select \#gcr-links .select-all \.gcr-link .data sub.links
+            ..exit!remove!
+            ..enter!append \line
+              ..attr \class \gcr-link
+              ..attr do
+                x1: (.source.x)
+                x2: (.target.x)
+                y1: (.source.y)
+                y2: (.target.y)
+
+          col = sub.col
+          d3.select-all \.handle .data sub.p, (.id)
+            ..classed \highlight true
+            ..style \stroke -> colors col[it.id]
+
+          if j is 4 # show schedule
+            sched = it
+            d3.select-all \.handle .data trace[2][i], (.id)
+              ..classed \scheduled true
+              ..style \stroke ->
+                s = 0
+                for slot, i in sched
+                  for n in slot
+                    if n is it
+                      s = i
+                colors s
+
+        case 5, 6, 7
+          uninformed = trace[5][i]
+          unclassify \highlight
+          unclassify \cover
+
+          sub = trace.6[i]
+          d3.select-all \.handle .data sub.p, (.id)
+            ..classed \highlight true
+
+          d3.select-all \.handle .data uninformed, (.id)
+            ..classed \uninformed true
+
+          if j is 6 or j is 7 # show color
+            d3.select \#udg-links .classed \hide true
+            d3.select \#links .classed \hide true
+            d3.select \#gct-links .select-all \.gct-link .data sub.links
+              ..exit!remove!
+              ..enter!append \line
+                ..attr \class \gct-link
+                ..attr do
+                  x1: (.source.x)
+                  x2: (.target.x)
+                  y1: (.source.y)
+                  y2: (.target.y)
+            col = sub.col
+            d3.select-all \.handle .data sub.p, (.id)
+              ..style \stroke -> colors col[it.id]
+            sched = it
+
+          if j is 7 # show schedule
+            d3.select-all \.handle .data uninformed, (.id)
+              ..classed \scheduled true
+              ..style \stroke ->
+                s = 0
+                for slot, i in sched
+                  for n in slot
+                    for nei in graph[n.id]
+                      if nei is it
+                        s = i
+                        break
+                colors s
+
+      ..on \mouseout (, i) !->
+        unclassify \highlight
+        unclassify \cover
+        unclassify \hide
+        unclassify \scheduled
+        unclassify \uninformed
+        d3.select \#handles .classed \unhighlight false
+        d3.select \#gcr-links .select-all \.gcr-link .remove!
+        d3.select \#gct-links .select-all \.gct-link .remove!
+        d3.select-all \.handle
+          ..style \stroke void
+
+DURATION = 1000ms
 
 document.get-element-by-id \anim .add-event-listener \click !->
   d3.select \#pulses .select-all \.pulses .data nodes
@@ -213,4 +355,22 @@ d3.select \#field
 
 document.query-selector ".handle.n#{source.id}"
   ..class-list.add \source
+
+bind-visible = (checkbox, el) ->
+  el = document.get-element-by-id el
+  document.get-element-by-id checkbox
+    ..add-event-listener \click !->
+      if not @checked
+        el.class-list.add \really-hide
+      else
+        el.class-list.remove \really-hide
+    if ..checked
+      el.class-list.remove \really-hide
+    else
+      el.class-list.add \really-hide
+
+bind-visible \udg \udg-links
+bind-visible \bfs \links
+bind-visible \hull \levels
+
 

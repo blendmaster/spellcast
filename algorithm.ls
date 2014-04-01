@@ -84,16 +84,25 @@ intersect = (a, b) ->
       i.push k
   i
 
+tracer =
+  * 'Level'
+  * 'independent set'
+  * 'set cover'
+  * 'color-ui'
+  * 'schedule-ui'
+  * 'uninformed'
+  * 'color-wi'
+  * 'schedule-wi'
+
 cabs = (graph, gcr, gct, btree, set) ->
   informed = {}
   level = [btree]
   schedule = []
+  trace = [[] for thing in tracer]
   i = 0
   while level.length > 0
-    #console.log "level" i
-    #console.log \informed informed
+    trace.0.push i
     i++
-    #console.log "nodes" level.map (.node)
     uci = {}
     ui = level.map (.node) .filter -> set[it.id]
     for node in ui
@@ -104,14 +113,15 @@ cabs = (graph, gcr, gct, btree, set) ->
             # add at most one informed neighbor
             uci[n.id] = n
             break
-    #console.log "ui" ui
+    trace.1.push ui
     # turn uci from map to list
     uci = Object.keys uci .map (uci.)
-    #console.log "uci" uci
+    trace.2.push uci
     # uci now covers ui from upper (informed) levels
-    subs = subs1 = sub-cabs graph, ui, true, uci, gcr
-    #console.log 'subs uci to ui' subs
+    {subs, subtrace} = subs1 = sub-cabs graph, ui, true, uci, gcr
     subs.=filter (.length > 0)
+    trace.3.push subtrace
+    trace.4.push subs
     schedule.push ...subs if subs.length > 0
     # all uninformed neighbors of ui
     wi = []
@@ -119,20 +129,19 @@ cabs = (graph, gcr, gct, btree, set) ->
       for n in graph[node.id]
         if not informed[n.id]
           wi.push n
+    trace.5.push wi
 
-    #console.log 'wi' wi
-    subs = subs2 = sub-cabs graph, ui, false, wi, gct
-    #console.log 'subs ui to wi' subs
+    {subs, subtrace} = subs2 = sub-cabs graph, ui, false, wi, gct
     subs.=filter (.length > 0)
+    trace.6.push subtrace
+    trace.7.push subs
     schedule.push ...subs if subs.length > 0
 
-    for node in wi
-      informed[node.id] = true
-    for {node} in level
-      # all nodes are now informed
+    for node in wi ++ ui
       informed[node.id] = true
     level = [].concat.apply [], level.map (.children)
-  schedule
+
+  {trace, schedule}
 
 function filter-graph graph, vertices
   v = index vertices, (.id)
@@ -140,7 +149,6 @@ function filter-graph graph, vertices
   for n, nei of graph
     if v[n]
       filtered[n] = nei.filter -> v[it.id]?
-  #console.log 'xxxxxxxfiltered' filtered
   filtered
 
 function order-least-degree graph
@@ -154,45 +162,39 @@ function coloring graph
   max = 0
   col = {}
   for [n, nei] in order-least-degree graph
-    #console.log 'xxxx' n, nei
     nei-col = {}
     for nn in nei
-      #console.log 'xxxx nn' nn, col[nn.id]
       if col[nn.id]?
         nei-col[that] = true
-    #console.log 'xxxx nei-col' nei-col
     i = 0
     while nei-col[i]
       i++
     col[n] = i
-    #console.log 'xxxx post col' Object.keys(col)map -> it + col[it]
     max = max >? i
 
   return [col, max + 1]
 
 function sub-cabs graph, p, is-receive, q, gc
-  return [] if q.length is 0 and not is-receive
-  #console.log '-------'
+  subtrace = {}
   qi = index q, (.id)
-  #console.log '---qi'  qi
-  [col, colors] = coloring filter-graph gc, p
-  #console.log '---colors' col
+  fgraph = filter-graph gc, p
+  subtrace.p = p
+  subtrace.fgraph = fgraph
+  subtrace.links = graph-links fgraph, p
+  [col, colors] = coloring fgraph
+  subtrace.col = col
   s = [{} for i til colors]
+  return {subs: [], subtrace} if q.length is 0 and not is-receive
   for u in p
-    #console.log '---' u.id
     if is-receive
-      #console.log \---is-receive
       # add neighbor of u in q
       for n in graph[u.id]
-        #console.log '---considering' n
         if qi[n.id]
-          #console.log '---adding' n
           s[col[u.id]][n.id] = n
           break
     else
       s[col[u.id]][u.id] = u
 
-  #console.log '--- final s' s
-
-  return s.map (set) -> Object.keys set .map (set.) # back to arrays
+  subs = s.map (set) -> Object.keys set .map (set.) # back to arrays
+  return {subs, subtrace}
 
