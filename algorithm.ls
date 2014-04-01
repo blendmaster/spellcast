@@ -198,3 +198,86 @@ function sub-cabs graph, p, is-receive, q, gc
   subs = s.map (set) -> Object.keys set .map (set.) # back to arrays
   return {subs, subtrace}
 
+function to-set list
+  s = {}
+  for list
+    s[..id] = s
+  s
+
+function set-minus a, b
+  s = {}
+  for k, v of a
+    unless b[k]
+      s[k] = v
+  s
+
+function set-size
+  s = 0
+  for k of it
+    s++
+  s
+
+function by-fn fn
+  (a, b) ->
+    fna = fn a
+    fnb = fn b
+    if fna > fnb
+      1
+    else if fna < fnb
+      -1
+    else
+      0
+
+function hcabs graph, r, alpha, beta, s, nodes
+  inf = {(s.id): s}
+  inflen = 1
+  active = {(s.id): s}
+  time = 0
+  schedule = []
+  while inflen is not nodes.length
+    q = []
+    for k, n of active
+      q.push n
+
+    ss = {}
+
+    while q.length > 0
+      u = q
+        .sort by-fn -> set-size set-minus (to-set graph[it.id]), inf
+        .unshift!
+
+      n-inf = set-minus (to-set graph[u.id]), inf
+      if set-size(n-inf) > 0
+        nu-q = []
+        # remove all nodes whose transmissions would conflict with
+        # u's transmission
+        for v in q
+          v-inf = set-minus (to-set graph[v.id]), inf
+          for k, w of v-inf
+            unless dist(u, w) <= alpha * r
+              nu-q.push v
+        q = nu-q
+        nu-q = []
+        for k, v of n-inf
+          for w in q
+            unless dist(w, v) <= alpha * r
+              nu-q.push w
+        q = nu-q
+        nu-q = []
+        for v in q
+          unless dist(u, v) <= beta * r
+            nu-q.push v
+        q = nu-q
+
+        ss[u.id] = u
+
+        for w in n-inf
+          inf[w.id] = w
+          active[w.id] = w
+
+    time++
+    schedule[time] = Object.keys(ss)map (ss.)
+
+  return schedule
+
+
