@@ -293,6 +293,9 @@ document.get-element-by-id \anim .add-event-listener \click !->
       ..attr \r 5
       ..attr \class "status received"
 
+document.get-element-by-id \clear .add-event-listener \click !->
+  d3.select-all \.status .remove!
+
 # bind stuff
 d3.select \#field
   ..attr width: WIDTH, height: HEIGHT
