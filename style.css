@@ -118,7 +118,7 @@ html {
 }
 
 #trace td {
-  width: 2em
+  width: 1em
 
 }
 
@@ -163,6 +163,14 @@ table {
 
 th, td {
   padding: 0.25em
+}
+
+#trace tr:hover {
+  background: #ddd;
+}
+
+td:hover {
+  background: #ccc;
 }
 
 .handle.uninformed {

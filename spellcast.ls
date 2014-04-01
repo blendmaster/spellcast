@@ -1,6 +1,6 @@
 const
-  WIDTH = 500
-  HEIGHT = 500
+  WIDTH = document.document-element.client-width - 50
+  HEIGHT = 400
   TRANSMISSION_RANGE    = 50
   INTERFERENCE_RANGE    = 70
   CARRIER_SENSING_RANGE = 90
