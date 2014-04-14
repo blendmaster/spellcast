@@ -3,7 +3,8 @@
   :url "https://github.com/blendmaster/spellcast"
   :license {:name "Unlicense"
             :url "http://unlicense.org/"}
-  :dependencies [[org.clojure/clojure "1.6.0"]]
+  :dependencies [[org.clojure/clojure "1.6.0"]
+                 [clojush "1.3.58"]]
   :main ^:skip-aot spellcast.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
