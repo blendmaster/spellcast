@@ -88,6 +88,8 @@ public Graph(double tRange, double iRange, double sRange, List<P> ps) {
   }
   depth = d - 1;
 
+  assert seen.cardinality() == n;
+
   for (int t = 0; t < n; ++t) {
     // collect all decendents.
     BitSet decendents = new BitSet(n);

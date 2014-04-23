@@ -8,7 +8,8 @@
         [clojure.math.numeric-tower]
         [clojure.set])
   (:import [spellcast.core Graph Graph$P HCABS Selector]
-           [java.util BitSet])
+           [java.util BitSet]
+           [org.uncommons.maths.random MersenneTwisterRNG])
   (:gen-class))
 
 ;;;;;;;;;;;;
@@ -314,14 +315,43 @@
   (Graph. 1.0 1.1 1.2 ;; "standard" t-range, i-range, s-range
           (vec (map (fn [[x y]] (Graph$P. x y)) points))))
 
+;; for repeatable results, specify seed for test vector
+(def test-rng
+  (MersenneTwisterRNG. (.getBytes "testtesttesttest")))
+
+(defn bounce
+  [lower upper dv v]
+  (if
+    (or (< (+ v dv) lower) (> (+ v dv) upper)) (- v dv)
+    (+ v dv)))
+
+(defn rand-walk
+  "random walk in 100x100 zone, for graphs"
+  []
+  (iterate
+    (fn [[x y]]
+      (let [direction (* 2.0 Math/PI (.nextDouble test-rng))
+            d2 (+ (.nextDouble test-rng) (.nextDouble test-rng))
+            d (if (> d2 1.0) (dec d2) d2)
+            dx (* d (Math/cos direction))
+            dy (* d (Math/sin direction))
+            ]
+        [(bounce 0 100 dx x)
+         (bounce 0 100 dy y)]))
+    [50 50]))
+
 (def test-graphs
-  [(mk-graph
-    ;          4
-    ;          3
-    ;  x - 1 - 2 - 5 - 6
-    ;
-    ;  optimal: 0 1 2 3 5
-    [[0 0] [0 1] [0 2] [1 2] [2 2] [0 3] [0 4]])])
+  (vec
+    (concat
+      [(mk-graph
+         ;          4
+         ;          3
+         ;  x - 1 - 2 - 5 - 6
+         ;
+         ;  optimal: 0 1 2 3 5
+         [[0 0] [0 1] [0 2] [1 2] [2 2] [0 3] [0 4]])]
+      (for [n (range 20 300 20)]
+        (mk-graph (take n (rand-walk)))))))
 
 (defn error-function
   "evalulate program inside greedy algorithm, compared to lower bound (bfs-depth).
@@ -330,13 +360,14 @@
   [program]
   (let [selector (push-based-selector program)]
     (vec (for [graph test-graphs]
-             (abs (- (HCABS/run graph selector)
-                     (.depth graph)))))))
+           (- (double (/ (HCABS/run graph selector)
+                         (.depth graph)))
+              1)))))
 
 (comment (defn -main [& args]
-  (println
-    "test run:"
-    (HCABS/run (test-graphs 0) Selector/NUM_UNINFORMED))))
+           (println
+             "test run:"
+             (HCABS/run (test-graphs 0) Selector/NUM_UNINFORMED))))
 
 (defn -main [& args]
   (pushgp
@@ -455,15 +486,19 @@
                         bfs-parent
                         )
      ; :use-single-thread true
-     :population-size 1000
-     :max-generations 50
+     :population-size 500
+     :max-generations 1000
      :max-points 500
      :max-points-in-initial-program 200
-     :evalpush-limit 1000
+     :evalpush-limit 1500
      :use-lexicase-selection true
-     :mutation-probability 0.45
-     :crossover-probability 0.45
+     :mutation-probability 0.40
+     :crossover-probability 0.50
      :simplification-probability 0.0
      :ultra-probability 0.0
+     :print-json-logs true
+     :print-csv-logs true
+     :json-log-program-strings true
+     :report-simplifications 0
      :print-history false})
   (shutdown-agents))
