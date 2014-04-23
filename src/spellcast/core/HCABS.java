@@ -4,11 +4,8 @@ import java.util.*;
 
 public class HCABS {
 
-public static int run(
-  int n,
-  Graph g,
-  Selector selector
-) {
+public static int run(Graph g, Selector selector) {
+  int n = g.n;
   BitSet informed = new BitSet(n); informed.set(0);
   BitSet active   = new BitSet(n); active  .set(0);
   int time        = 0;
@@ -19,17 +16,25 @@ public static int run(
 
   while (informed.cardinality() < n) {
     able.clear(); able.or(active);
+    //System.out.println("able: "+ able);
+    //System.out.println("active: "+ active);
+    //System.out.println("informed: "+ informed);
 
     while (able.cardinality() > 0) {
       int u = selector.select(informed, active, able, g, time);
+      // System.out.println("select " + u);
+      assert able.get(u);
 
       able  .clear(u);
       active.clear(u);
 
       BitSet n_u = g.transmission[u];
+      //System.out.println("transmission nei" + n_u);
       noninf_n.clear(); noninf_n.or(n_u); noninf_n.andNot(informed);
+      //System.out.println("noninformed t nei" + noninf_n);
 
-      if (noninf_v.cardinality() > 0) {
+      //System.out.println("cardinality " + noninf_n.cardinality());
+      if (noninf_n.cardinality() > 0) {
         BitSet n_i = g.interference[u];
 
         // remove conflicts
@@ -56,12 +61,25 @@ public static int run(
         // mark neighbors as informed and active
         informed.or(noninf_n);
         active.or(noninf_n);
+      } else {
+        //System.out.println("nothing " + u);
       }
     }
     time++;
+    //System.out.println("===================next time " + time);
+    // if (time > 6) System.exit(-1);
   }
 
+  // System.out.println("done: " + time);
   return time;
+}
+
+public static Iterable<Integer> ones(BitSet b) {
+  List<Integer> s = new ArrayList<>();
+  for (int i = b.nextSetBit(0); i >= 0; i = b.nextSetBit(i+1)) {
+    s.add(i);
+  }
+  return s;
 }
 
 }

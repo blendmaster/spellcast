@@ -18,19 +18,22 @@ public static final Selector NUM_UNINFORMED = new Selector() {
     int time
   ) {
     // max by number of uninformed neighbors
-    int max = 0, maxCount = 0;
+    int max = -1, maxCount = -1;
     BitSet uninNei = new BitSet(g.n);
     for (int v = able.nextSetBit(0); v >= 0; v = able.nextSetBit(v+1)) {
       uninNei.clear(); uninNei.or(g.transmission[v]);
-      uninNei.and(informed);
+      uninNei.andNot(informed);
 
       int c = uninNei.cardinality();
+      // System.out.println(">>>node " + v + " : " + uninNei + " , nei "
+      //     + g.transmission[v]);
       if (c > maxCount) {
         maxCount = c;
         max = v;
       }
     }
 
+    // System.out.println(">>>apparent max " + max);
     return max;
   }
 };

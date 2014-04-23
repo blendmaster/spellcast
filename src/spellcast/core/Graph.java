@@ -19,6 +19,8 @@ public Graph(double tRange, double iRange, double sRange, List<P> ps) {
   assert tRange > 0 && tRange <= iRange && iRange <= sRange;
   assert !ps.isEmpty();
 
+  //System.out.println(ps);
+
   n = ps.size();
   transmission = new BitSet[n];
   interference = new BitSet[n];
@@ -31,18 +33,23 @@ public Graph(double tRange, double iRange, double sRange, List<P> ps) {
     sensing[i] = new BitSet(n);
   }
 
+  //System.out.println("range " + tRange + ", " + iRange + ", " + sRange);
   for (int i = 0; i < n; ++i) {
-    for (int j = i; j < n; ++j) {
+    for (int j = i + 1; j < n; ++j) {
       double dist = ps.get(i).dist(ps.get(j));
-      if (dist < sRange) {
+      //System.out.println("dist " + i + ", " + j + " : " + dist);
+      if (dist <= sRange) {
+        //System.out.println("s nei");
         sensing[i].set(j);
         sensing[j].set(i);
 
-        if (dist < iRange) {
+        if (dist <= iRange) {
+          //System.out.println("i nei");
           interference[i].set(j);
           interference[j].set(i);
 
-          if (dist < tRange) {
+          if (dist <= tRange) {
+            //System.out.println("t nei");
             transmission[i].set(j);
             transmission[j].set(i);
           }
@@ -104,7 +111,13 @@ public Graph(double tRange, double iRange, double sRange, List<P> ps) {
     bfsDecendents[t] = decendents.cardinality();
   }
 
-
+  // for (int i = 0; i < n; ++i) {
+    //System.out.println("node " + i);
+    //System.out.println("bfs children " + bfsChildren[i]);
+    //System.out.println("transmission " + transmission[i]);
+    //System.out.println("interference " + interference[i]);
+    //System.out.println("sensing      " + sensing[i]);
+  // }
 }
 
 public static class P {
@@ -112,6 +125,11 @@ public static class P {
   public P(double x, double y) {
     this.x = x;
     this.y = y;
+  }
+
+  public String toString() {
+    return "[" + x + "," + y + "]";
+
   }
 
   public double dist(P p) {
