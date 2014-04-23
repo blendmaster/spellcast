@@ -61,9 +61,20 @@ public static int run(Graph g, Selector selector) {
         // mark neighbors as informed and active
         informed.or(noninf_n);
         active.or(noninf_n);
-      } else {
-        //System.out.println("nothing " + u);
       }
+
+      // to prevent having to select over so many empty nodes,
+      // and since we aren't concerned about the receive schedule, remove
+      // any nodes without any uninformed neighbors now. They won't
+      // be able to inform any nodes anyway.
+      // for (int w = able.nextSetBit(0); w >= 0; w = able.nextSetBit(w+1)) {
+      //   n_u = g.transmission[u];
+      //   noninf_n.clear(); noninf_n.or(n_u); noninf_n.andNot(informed);
+      //   if (noninf_n.isEmpty()) {
+      //     able.clear(w);
+      //     active.clear(w);
+      //   }
+      // }
     }
     time++;
     //System.out.println("===================next time " + time);

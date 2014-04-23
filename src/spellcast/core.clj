@@ -326,7 +326,7 @@
     (+ v dv)))
 
 (defn rand-walk
-  "random walk in 100x100 zone, for graphs"
+  "random walk in a zone, for graphs"
   []
   (iterate
     (fn [[x y]]
@@ -336,9 +336,9 @@
             dx (* d (Math/cos direction))
             dy (* d (Math/sin direction))
             ]
-        [(bounce 0 100 dx x)
-         (bounce 0 100 dy y)]))
-    [50 50]))
+        [(bounce 0 25 dx x)
+         (bounce 0 25 dy y)]))
+    [15 15]))
 
 (def test-graphs
   (vec
@@ -350,7 +350,7 @@
          ;
          ;  optimal: 0 1 2 3 5
          [[0 0] [0 1] [0 2] [1 2] [2 2] [0 3] [0 4]])]
-      (for [n (range 20 300 20)]
+      (for [n (range 20 500 20)]
         (mk-graph (take n (rand-walk)))))))
 
 (defn error-function
@@ -360,9 +360,8 @@
   [program]
   (let [selector (push-based-selector program)]
     (vec (for [graph test-graphs]
-           (- (double (/ (HCABS/run graph selector)
-                         (.depth graph)))
-              1)))))
+           (double (/ (HCABS/run graph selector)
+                      (.depth graph)))))))
 
 (comment (defn -main [& args]
            (println
@@ -372,6 +371,7 @@
 (defn -main [& args]
   (pushgp
     {:error-function error-function
+     :error-threshold (* (count test-graphs) 1.50)
      :atom-generators '(
                         exec_y
                         exec_pop

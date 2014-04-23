@@ -68,14 +68,15 @@ public Graph(double tRange, double iRange, double sRange, List<P> ps) {
 
   q.add(0);
   seen.set(0);
-  int d = 0;
+  bfsDepth[0] = 0;
   while (!q.isEmpty()) {
+    // System.out.println("q" + q);
     int t = q.remove();
-    bfsDepth[t] = d;
 
     BitSet nei = transmission[t];
     for (int i = nei.nextSetBit(0); i >= 0; i = nei.nextSetBit(i+1)) {
       if (!seen.get(i)) {
+        bfsDepth[i] = bfsDepth[t] + 1;
         seen.set(i);
         q.add(i);
         bfsChildren[t].set(i);
@@ -83,14 +84,13 @@ public Graph(double tRange, double iRange, double sRange, List<P> ps) {
         bfsParent[i] = t;
       }
     }
-
-    ++d;
   }
-  depth = d - 1;
 
   assert seen.cardinality() == n;
 
+  int d = 0;
   for (int t = 0; t < n; ++t) {
+    if (bfsDepth[t] > d) { d = bfsDepth[t]; }
     // collect all decendents.
     BitSet decendents = new BitSet(n);
     q.clear();
@@ -113,12 +113,15 @@ public Graph(double tRange, double iRange, double sRange, List<P> ps) {
     bfsDecendents[t] = decendents.cardinality();
   }
 
+  depth = d;
+
   // for (int i = 0; i < n; ++i) {
-    //System.out.println("node " + i);
-    //System.out.println("bfs children " + bfsChildren[i]);
-    //System.out.println("transmission " + transmission[i]);
-    //System.out.println("interference " + interference[i]);
-    //System.out.println("sensing      " + sensing[i]);
+  //   System.out.println("node " + i);
+  //   System.out.println("bfs children " + bfsChildren[i]);
+  //   System.out.println("bfs depth " + bfsDepth[i]);
+  //   System.out.println("transmission " + transmission[i]);
+  //   System.out.println("interference " + interference[i]);
+  //   System.out.println("sensing      " + sensing[i]);
   // }
 }
 
