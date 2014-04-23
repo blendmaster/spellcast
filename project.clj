@@ -7,4 +7,5 @@
                  [clojush "1.3.58"]]
   :main ^:skip-aot spellcast.core
   :target-path "target/%s"
-  :profiles {:uberjar {:aot :all}})
+  :profiles {:uberjar {:aot :all}}
+  :java-source-paths ["src"])
