@@ -142,6 +142,9 @@
 (define-registered get-time
   (fn [state] (push-item (stack-ref :auxiliary 4 state) :integer state)))
 
+(define-registered get-size
+  (fn [state] (push-item (.n (stack-ref :auxiliary 0 state)) :integer state)))
+
 (define-registered get-depth
   (fn [state] (push-item (.depth (stack-ref :auxiliary 0 state)) :integer state)))
 
@@ -487,6 +490,7 @@
              reduce-min
 
              get-time
+             get-size
              get-depth
              nodes-of
              neighbors-of
@@ -571,6 +575,7 @@
       :crossover-probability 0.50
       :simplification-probability 0.0
       :ultra-probability 0.0
+      :print-timings false
       :print-csv-logs true
       :report-simplifications 0
       :print-history false})
