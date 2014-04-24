@@ -312,8 +312,8 @@
 (defn mk-graph
   "[[x y]] -> Graph
   assumes points are connected"
-  [points]
-  (Graph. 1.0 1.1 1.2 ;; "standard" t-range, i-range, s-range
+  [t-range i-range s-range points]
+  (Graph. t-range i-range s-range
           (vec (map (fn [[x y]] (Graph$P. x y)) points))))
 
 ;; for repeatable results, specify seed for test vector
@@ -347,6 +347,23 @@
     (java.util.Collections/shuffle al rng)
     (clojure.lang.RT/vector (.toArray al))))
 
+(defn uniform-graph
+  "different strategy of generating connected graphs,
+  where points are put into boxes in order, making sure
+  they always have a neighbor"
+  [n]
+  (let [peturb (repeatedly n (fn [] [(* 0.5 (.nextDouble test-rng))
+                                     (* 0.5 (.nextDouble test-rng))]))
+        grid (for [i (range 0 25 0.5)
+                   j (range 0 25 0.5)]
+               [i j])
+
+        ;; peturb each grid point.
+        nodes (map (fn [[x y] [dx dy]] [(+ x dx) (+ y dy)])
+                   peturb
+                   (cycle grid))]
+    (mk-graph 1.0 1.1 1.2 nodes)))
+
 (def test-graphs
   (vec
     (concat
@@ -356,164 +373,196 @@
          ;  x - 1 - 2 - 5 - 6
          ;
          ;  optimal: 0 1 2 3 5
+         1.0 1.1 1.2 ;; "standard" t-range, i-range, s-range
          [[0 0] [0 1] [0 2] [1 2] [2 2] [0 3] [0 4]])]
       (for [n (range 20 200 20)]
+        (uniform-graph n))
+      (for [n (range 20 200 20)
+            i (range 3)] ; repeat each n
         ;; shuffle,
-        (mk-graph (shuffle-with test-rng (take n (rand-walk))))))))
+        (mk-graph 1.0 1.1 1.2 ;; "standard" t-range, i-range, s-range
+          (shuffle-with test-rng (take n (rand-walk))))))))
 
-(defn error-function
-  "evalulate program inside greedy algorithm, compared to lower bound (bfs-depth).
+(defn run-tests
+  "evalulate selector inside greedy algorithm, compared to lower bound (bfs-depth).
   For most graphs, bfs-depth is too low, so programs can't be perfect (0 vector).
   But otherwise, it's a decent function with forgiving slope."
+  [selector]
+  (vec (for [graph test-graphs]
+         (double (/ (HCABS/run graph selector)
+                    (.depth graph))))))
+
+(defn error-function
+  "evalulate push program."
   [program]
-  (let [selector (push-based-selector program)]
-    (vec (for [graph test-graphs]
-           (double (/ (HCABS/run graph selector)
-                      (.depth graph)))))))
+  (run-tests (push-based-selector program)))
 
 (comment (defn -main [& args]
            (println
              "test run:"
              (HCABS/run (test-graphs 0) Selector/NUM_UNINFORMED))))
 
-(defn -main [& args]
-  (if (not-empty args)
-    (doseq [n (range 0 (count test-graphs))]
-      (let [ps (.ps (test-graphs n))
-            x (map #(.x %) ps)
-            y (map #(.y %) ps)]
-        (spit (str "test-data-" n ".svg")
-              (chart/emit-svg
-                (-> (chart/xy-plot :width 500 :height 500
-                                   :xmin 0 :xmax 25
-                                   :ymin 0 :ymax 25
-                                   :r 1)
-                    (chart/add-points [x y] :transpose-data?? true
-                                      :fill "rgba(0,0,0,0.1)"
-                                      :size (/ 500 25))
-                    (chart/add-points [x y] :transpose-data?? true
-                                      :fill "rgba(0,255,0,1)"
-                                      :size 1))))))
-    (do
-      (pushgp
-        {:error-function error-function
-         :error-threshold (* (count test-graphs) 1.50)
-         :atom-generators '(
-                            exec_y
-                            exec_pop
-                            exec_eq
-                            exec_stackdepth
-                            exec_rot
-                            exec_when
-                            exec_do*times
-                            exec_do*count
-                            exec_s
-                            exec_do*range
-                            exec_if
-                            exec_k
-                            exec_yank
-                            exec_yankdup
-                            exec_swap
-                            exec_dup
-                            exec_shove
+(def atoms '(
+             exec_y
+             exec_pop
+             exec_eq
+             exec_stackdepth
+             exec_rot
+             exec_when
+             exec_do*times
+             exec_do*count
+             exec_s
+             exec_do*range
+             exec_if
+             exec_k
+             exec_yank
+             exec_yankdup
+             exec_swap
+             exec_dup
+             exec_shove
 
-                            boolean_pop
-                            boolean_dup
-                            boolean_swap
-                            boolean_rot
-                            boolean_flush
-                            boolean_eq
-                            boolean_stackdepth
-                            boolean_yank
-                            boolean_yankdup
-                            boolean_shove
-                            boolean_and
-                            boolean_or
-                            boolean_not
-                            boolean_xor
-                            boolean_invert_first_then_and
-                            boolean_invert_second_then_and
-                            boolean_frominteger
+             boolean_pop
+             boolean_dup
+             boolean_swap
+             boolean_rot
+             boolean_flush
+             boolean_eq
+             boolean_stackdepth
+             boolean_yank
+             boolean_yankdup
+             boolean_shove
+             boolean_and
+             boolean_or
+             boolean_not
+             boolean_xor
+             boolean_invert_first_then_and
+             boolean_invert_second_then_and
+             boolean_frominteger
 
-                            integer_flush
-                            integer_stackdepth
-                            integer_yank
-                            integer_yankdup
-                            integer_shove
-                            integer_add
-                            integer_div
-                            integer_dup
-                            integer_eq
-                            integer_gt
-                            integer_lt
-                            integer_mod
-                            integer_mult
-                            integer_pop
-                            integer_rot
-                            integer_sub
-                            integer_swap
-                            integer_fromboolean
-                            integer_min
-                            integer_max
+             integer_flush
+             integer_stackdepth
+             integer_yank
+             integer_yankdup
+             integer_shove
+             integer_add
+             integer_div
+             integer_dup
+             integer_eq
+             integer_gt
+             integer_lt
+             integer_mod
+             integer_mult
+             integer_pop
+             integer_rot
+             integer_sub
+             integer_swap
+             integer_fromboolean
+             integer_min
+             integer_max
 
-                            node_pop
-                            node_dup
-                            node_swap
-                            node_rot
-                            node_flush
-                            node_eq
-                            node_stackdepth
-                            node_yank
-                            node_yankdup
-                            node_shove
-                            return_fromnode
+             node_pop
+             node_dup
+             node_swap
+             node_rot
+             node_flush
+             node_eq
+             node_stackdepth
+             node_yank
+             node_yankdup
+             node_shove
+             return_fromnode
 
-                            bitset_pop
-                            bitset_dup
-                            bitset_swap
-                            bitset_rot
-                            bitset_flush
-                            bitset_eq
-                            bitset_stackdepth
-                            bitset_yank
-                            bitset_yankdup
-                            bitset_shove
+             bitset_pop
+             bitset_dup
+             bitset_swap
+             bitset_rot
+             bitset_flush
+             bitset_eq
+             bitset_stackdepth
+             bitset_yank
+             bitset_yankdup
+             bitset_shove
 
-                            reduce-max
-                            reduce-min
+             reduce-max
+             reduce-min
 
-                            get-time
-                            get-depth
-                            nodes-of
-                            neighbors-of
-                            interferers-of
-                            sensors-of
-                            bfs-children
+             get-time
+             get-depth
+             nodes-of
+             neighbors-of
+             interferers-of
+             sensors-of
+             bfs-children
 
-                            set-cardinality
-                            is-empty
-                            get-informed
-                            get-active
-                            get-able
+             set-cardinality
+             is-empty
+             get-informed
+             get-active
+             get-able
 
-                            set-and
-                            set-or
-                            set-xor
-                            set-intersects
-                            set-get
-                            set-flip
-                            set-set
-                            set-clear
-                            in-set
+             set-and
+             set-or
+             set-xor
+             set-intersects
+             set-get
+             set-flip
+             set-set
+             set-clear
+             in-set
 
-                            bfs-depth
-                            bfs-decendents
-                            bfs-child-count
-                            bfs-parent
-                            )
+             bfs-depth
+             bfs-decendents
+             bfs-child-count
+             bfs-parent
+             ))
+
+(defn viz
+  []
+  (doseq [n (range 0 (count test-graphs))]
+    (let [ps (.ps (test-graphs n))
+          x (map #(.x %) ps)
+          y (map #(.y %) ps)]
+      (spit (str "test-data-" n ".svg")
+            (chart/emit-svg
+              (-> (chart/xy-plot :width 500 :height 500
+                                 :xmin 0 :xmax 25
+                                 :ymin 0 :ymax 25
+                                 :r 1)
+                  (chart/add-points [x y] :transpose-data?? true
+                                    :fill "rgba(0,0,0,0.1)"
+                                    :size (/ 500 25))
+                  (chart/add-points [x y] :transpose-data?? true
+                                    :fill "rgba(0,255,0,1)"
+                                    :size 1)))))))
+
+(defn average
+  [coll]
+  (/ (apply + coll) (count coll)))
+
+(defn -main
+  ([arg & [file]]
+   (case arg
+     "viz" (viz)
+     "retest" ;; read best program from file and compare
+              ;; could do more extensive test against more graphs here
+     (let [input (slurp file)
+           code (read-string input)
+           input-errors (error-function code)
+           paper-errors (run-tests Selector/NUM_UNINFORMED)]
+       (println "input errors: " input-errors)
+       (println "sum " (apply + input-errors))
+       (println "paper errors: " paper-errors)
+       (println "sum " (apply + paper-errors))
+       )))
+  ([]
+   (pushgp
+     {:error-function error-function
+      ;; try to beat paper's best average
+      :error-threshold (average (run-tests Selector/NUM_UNINFORMED))
+      :atom-generators atoms
       ; :use-single-thread true
-      :population-size 200
-      :max-generations 1000
+      :population-size 500
+      :max-generations 100
       :max-points 500
       :max-points-in-initial-program 200
       :evalpush-limit 500
@@ -522,9 +571,7 @@
       :crossover-probability 0.50
       :simplification-probability 0.0
       :ultra-probability 0.0
-      :print-json-logs true
       :print-csv-logs true
-      :json-log-program-strings true
       :report-simplifications 0
       :print-history false})
-      (shutdown-agents))))
+   (shutdown-agents)))
