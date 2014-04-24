@@ -15,9 +15,14 @@ public final int[] bfsChildCount; // int -> number of child nodes
 public final int[] bfsDecendents; // int -> number of nodes "under" it
 public final int[] bfsParent; // int -> parent id, (root goes to root)
 
+// for visualization
+public final List<P> ps;
+
 public Graph(double tRange, double iRange, double sRange, List<P> ps) {
   assert tRange > 0 && tRange <= iRange && iRange <= sRange;
   assert !ps.isEmpty();
+
+  this.ps = ps;
 
   //System.out.println(ps);
 
