@@ -386,24 +386,22 @@
         (mk-graph 1.0 1.1 1.2 ;; "standard" t-range, i-range, s-range
           (shuffle-with test-rng (take n (rand-walk))))))))
 
-(defn run-tests
+
+(defn run-test
   "evalulate selector inside greedy algorithm, compared to lower bound (bfs-depth).
   For most graphs, bfs-depth is too low, so programs can't be perfect (0 vector).
   But otherwise, it's a decent function with forgiving slope."
-  [selector]
-  (vec (for [graph test-graphs]
-         (double (/ (HCABS/run graph selector)
-                    (.depth graph))))))
+  [selector graph]
+    (double (/ (HCABS/run graph selector) (.depth graph))))
+
+(defn run-tests
+  [selector test-graphs]
+  (vec (for [graph test-graphs] (run-test selector graph))))
 
 (defn error-function
   "evalulate push program."
   [program]
-  (run-tests (push-based-selector program)))
-
-(comment (defn -main [& args]
-           (println
-             "test run:"
-             (HCABS/run (test-graphs 0) Selector/NUM_UNINFORMED))))
+  (run-tests (push-based-selector program) test-graphs))
 
 (def atoms '(
              exec_y
@@ -543,6 +541,7 @@
   [coll]
   (/ (apply + coll) (count coll)))
 
+
 (defn -main
   ([arg & [file]]
    (case arg
@@ -552,12 +551,40 @@
      (let [input (slurp file)
            code (read-string input)
            input-errors (error-function code)
-           paper-errors (run-tests Selector/NUM_UNINFORMED)]
+           paper-errors (run-tests Selector/NUM_UNINFORMED test-graphs)]
        (println "input errors: " input-errors)
        (println "sum " (apply + input-errors))
        (println "paper errors: " paper-errors)
        (println "sum " (apply + paper-errors))
-       )))
+       )
+     "full-test" ;; generate larger test set, write graphs
+     (let [input (slurp file)
+           code (read-string input)
+           selector (push-based-selector code)
+           tests (for [n (range 10 500 10)
+                       i (range 0 20)]
+                   [n (mk-graph 1.0 1.1 1.2 ;; "standard" t-range, i-range, s-range
+                                (shuffle-with test-rng (take n (rand-walk))))])
+           input-errors (for [[n t] tests]
+                          [n (run-test selector t)])
+           paper-errors (for [[n t] tests]
+                          [n (run-test Selector/NUM_UNINFORMED t)])
+           ]
+       (spit (str "test-results.svg")
+             (chart/emit-svg
+               (-> (chart/xy-plot :width 500 :height 500
+                                  :xmin 0 :xmax 500
+                                  :ymin 0 :ymax
+                                  (apply max (for [[n t] input-errors] t))
+                                  )
+                   (chart/add-points input-errors
+                                     :fill "rgba(255,0,0,1)"
+                                     :size 3)
+                   (chart/add-points paper-errors
+                                     :fill "rgba(0,0,255,1)"
+                                     :size 2))))
+       )
+     ))
   ([]
    (pushgp
      {:error-function error-function
