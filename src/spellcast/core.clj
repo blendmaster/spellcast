@@ -380,18 +380,21 @@
     (+ v dv)))
 
 (defn rand-walk
-  "random walk in a zone, for graphs"
+  "random walk in a zone, for graphs, sometimes going back to root"
   []
   (iterate
     (fn [[x y]]
-      (let [direction (* 2.0 Math/PI (.nextDouble test-rng))
+      (let [reset? (> (.nextDouble test-rng) 0.95)
+            cx (if reset? 12.5 x)
+            cy (if reset? 12.5 y)
+            direction (* 2.0 Math/PI (.nextDouble test-rng))
             d2 (+ (.nextDouble test-rng) (.nextDouble test-rng))
             d (if (> d2 1.0) (dec d2) d2)
             dx (* d (Math/cos direction))
             dy (* d (Math/sin direction))
             ]
-        [(bounce 0 25 dx x)
-         (bounce 0 25 dy y)]))
+        [(bounce 0 25 dx cx)
+         (bounce 0 25 dy cy)]))
     [12.5 12.5]))
 
 (defn shuffle-with
@@ -415,7 +418,7 @@
         nodes (map (fn [[x y] [dx dy]] [(+ x dx) (+ y dy)])
                    peturb
                    (cycle grid))]
-    (mk-graph 1.0 1.1 1.2 nodes)))
+    (mk-graph 1.0 1.1 1.2 (shuffle-with test-rng nodes))))
 
 (def test-graphs
   (vec
@@ -428,14 +431,11 @@
          ;  optimal: 0 1 2 3 5
          1.0 1.1 1.2 ;; "standard" t-range, i-range, s-range
          [[0 0] [0 1] [0 2] [1 2] [2 2] [0 3] [0 4]])]
-      (for [n (range 20 200 20)]
-        (uniform-graph n))
-      (for [n (range 20 200 20)
-            i (range 3)] ; repeat each n
+      (for [n (range 20 50 10)
+            i (range 5)] ; repeat each n
         ;; shuffle,
         (mk-graph 1.0 1.1 1.2 ;; "standard" t-range, i-range, s-range
           (shuffle-with test-rng (take n (rand-walk))))))))
-
 
 (defn run-test
   "evalulate selector inside greedy algorithm, compared to lower bound (bfs-depth).
