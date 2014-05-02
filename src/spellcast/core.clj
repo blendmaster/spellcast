@@ -6,12 +6,62 @@
         [clojush.instructions.common]
         [clojush.instructions.return]
         [clojure.math.numeric-tower]
-        [clojure.set])
+        [clojure.set]
+        [clojush globals util pushstate random individual evaluate simplification]
+        )
   (:require [analemma.charts :as chart])
   (:import [spellcast.core Graph Graph$P HCABS Selector]
            [java.util BitSet]
            [org.uncommons.maths.random MersenneTwisterRNG])
   (:gen-class))
+
+;; XXX monkey patch clojush's initial population handling
+(in-ns 'clojush.pushgp.pushgp)
+(defn make-agents-and-rng
+  [{:keys [initial-population use-single-thread population-size
+           max-points-in-initial-program atom-generators random-seed
+           save-initial-population]}]
+  (let [agent-error-handler (fn [agnt except]
+                              (.printStackTrace except System/out)
+                              (.printStackTrace except)
+                              (System/exit 0))
+        ;random-seeds (repeatedly population-size #(random/lrand-bytes (:mersennetwister random/*seed-length*)))];; doesn't ensure unique seeds
+        random-seeds (loop [seeds '()]
+                       (let [num-remaining (if initial-population
+                                             ;; XXX here's the bug, I think they expect initial-population to
+                                             ;; already be read, but at this point it's a string
+                                             ;; (- (count initial-population) (count seeds))
+                                             ;; assume it's the same pop size
+                                             (- population-size (count seeds))
+                                             (- population-size (count seeds)))]
+                         (if (pos? num-remaining)
+                           (let [new-seeds (repeatedly num-remaining #(random/lrand-bytes (:mersennetwister random/*seed-length*)))]
+                             (recur (concat seeds (filter (fn [candidate]
+                                                            (not (some #(random/=byte-array % candidate)
+                                                                       seeds))) new-seeds)))); only add seeds that we do not already have
+                           seeds)))]
+    {:pop-agents (if initial-population
+                   (let [p (->> (read-string (slurp (str "data/" initial-population)))
+                                (map #(if use-single-thread (atom %) (agent %)))
+                                (vec))]
+                     (println (p 0))
+                     p)
+                   (let [pa (doall (for [_ (range population-size)]
+                                     (make-individual
+                                       :program (random-code max-points-in-initial-program atom-generators))))
+                         f (str "data/" (System/currentTimeMillis) ".ser")]
+                     (when save-initial-population
+                       (io/make-parents f)
+                       (spit f (pr-str pa)))
+                     (vec (map #(if use-single-thread (atom %) (agent %)) pa))))
+     :child-agents (vec (doall (for [_ (range population-size)]
+                                 ((if use-single-thread atom agent)
+                                      (make-individual)
+                                      :error-handler agent-error-handler))))
+     :random-seeds random-seeds
+     :rand-gens (vec (doall (for [k (range population-size)]
+                              (random/make-mersennetwister-rng (nth random-seeds k)))))
+     }))
 
 ;;;;;;;;;;;;
 ;; To make the integer stack less overloaded, define some similar
@@ -392,7 +442,7 @@
   For most graphs, bfs-depth is too low, so programs can't be perfect (0 vector).
   But otherwise, it's a decent function with forgiving slope."
   [selector graph]
-    (double (/ (HCABS/run graph selector) (.depth graph))))
+    (- (double (/ (HCABS/run graph selector) (.depth graph))) 1))
 
 (defn run-tests
   [selector test-graphs]
@@ -584,16 +634,27 @@
                                      :fill "rgba(0,0,255,1)"
                                      :size 2))))
        )
-     ))
+     "log-progress" ;; read log.csv and graph generation performance
+     (with-open [rdr (clojure.java.io/reader "log.csv")]
+       (let [lines (drop 1 (line-seq rdr))
+             vecs (for [line lines] (clojure.string/split line #","))
+             points (vec (for [[gen in error size] vecs] [(read-string gen)
+                                                     (read-string error)]))
+
+             ]
+         (spit (str "progress.csv")
+               (clojure.string/join "\n"
+                                    (for [point points]
+                                      (clojure.string/join "," point))))))))
   ([]
    (pushgp
      {:error-function error-function
       ;; try to beat paper's best average
-      :error-threshold (average (run-tests Selector/NUM_UNINFORMED))
+      :error-threshold (average (run-tests Selector/NUM_UNINFORMED test-graphs))
       :atom-generators atoms
       ; :use-single-thread true
       :population-size 500
-      :max-generations 100
+      :max-generations 200
       :max-points 500
       :max-points-in-initial-program 200
       :evalpush-limit 500
@@ -604,6 +665,8 @@
       :ultra-probability 0.0
       :print-timings false
       :print-csv-logs true
+      :save-initial-population true
+      :initial-population "1398667653967.ser"
       :report-simplifications 0
       :print-history false})
    (shutdown-agents)))
